@@ -18,7 +18,7 @@ from Components.Sources.StaticText import StaticText
 ###########################################################################
 #from Components.MenuList import MenuList
 from Components.ConfigList import ConfigList, ConfigListScreen
-from Components.config import config, configfile, getConfigListEntry, ConfigDirectory, ConfigSubsection, ConfigSubList, ConfigEnableDisable, ConfigSelection, ConfigYesNo, ConfigSet, ConfigText
+from Components.config import config, configfile, getConfigListEntry, ConfigDirectory, ConfigSubsection, ConfigSubList, ConfigEnableDisable, ConfigSelection, ConfigYesNo, ConfigSet, ConfigText, KEY_OK
 ###########################################################################
 import urllib2
 import cookielib
@@ -59,6 +59,7 @@ plugin_version_online = '0.0.000000'
 
 ###########################################################################
 ###########################################################################
+
 
 
 class mainConfigScreen(Screen, ConfigListScreen):
@@ -133,21 +134,16 @@ class mainConfigScreen(Screen, ConfigListScreen):
         {
             'left'  : self.keyToLeft,
             'right' : self.keyToRight,
+            'ok'    : self.keyToOk,
             'yellow': self.keyToUpdatePlugin,
             'blue'  : self.keyToUpdatePicons,
             'green' : self.exitWithSave,
             'red'   : self.exitWithoutSave,
-            'cancel': self.keyToExit,
-            'ok'    : self.keyToOk
+            'cancel': self.keyToExit
         }, -2)
 
         self.bin7zip = None             # path to directory with '7z' or '7za' executable binary file
         self.chochoContent = None       # content of the file "id_for_permalinks*.log" - downloaded from google.drive
-
-        #self.onShown.append(self.rebuildConfigList)
-        #self.onLayoutFinish.append(self.layoutFinished)
-
-        #self.prepareSetup()
 
         self.layoutFinishTimer = eTimer()
         if newOE():
@@ -166,9 +162,11 @@ class mainConfigScreen(Screen, ConfigListScreen):
         else:
             self.skin = mainConfigScreen.skin
             self.layoutFinishTimer.callback.append(self.prepareSetup)                                   # eTimer for older versions (OE2.0)
+        
         self.layoutFinishTimer.start(200, True)
-
-        #self.onLayoutFinish.append(self.check7zip)      # this line is no longer useful ... Screen is still not ready to call MessageBox in check7zip()
+        
+        #self.onShown.append(self.rebuildConfigList)
+        #self.onLayoutFinish.append(self.layoutFinished)
 
     def prepareSetup(self):
 
@@ -182,12 +180,12 @@ class mainConfigScreen(Screen, ConfigListScreen):
                             ('/picon','/picon'),
                             ('/usr/share/enigma2/XPicons/picon','/usr/share/enigma2/XPicons/picon'),
                             ('/usr/share/enigma2/ZZPicons/picon','/usr/share/enigma2/ZZPicons/picon'),
-                            ('(user defined)' , _('(user defined)')  )
+                            ('user_defined' , _('(user defined)')  )
                           ]
                         )     # --- all folders are from source code, here:   https://github.com/openatv/MetrixHD/blob/master/usr/lib/enigma2/python/Components/Renderer/MetrixHDXPicon.py
-        config.plugins.chocholousekpicons.piconFolderUser = ConfigText(default = '/')
+        config.plugins.chocholousekpicons.piconFolderUser = ConfigText(default = '/', fixed_size = False)
         # change the default picon directory + set this found entry, if some .png files will found in some folder:
-        if config.plugins.chocholousekpicons.piconFolder.value != '(user defined)':
+        if config.plugins.chocholousekpicons.piconFolder.value != 'user_defined':
             for picdir in config.plugins.chocholousekpicons.piconFolder.choices:
                 if glob.glob(picdir[0] + '/*.png'):
                     config.plugins.chocholousekpicons.piconFolder.default = picdir[0]
@@ -212,19 +210,23 @@ class mainConfigScreen(Screen, ConfigListScreen):
 
     def keyToLeft(self):
         ConfigListScreen.keyLeft(self)
-        self.rebuildConfigList()
+        #if self.getCursorEntry() != _('User defined folder'):
+        #    self.rebuildConfigList()
 
     def keyToRight(self):
         ConfigListScreen.keyRight(self)
-        self.rebuildConfigList()
+        #if self.getCursorEntry() != _('User defined folder'):
+        #    self.rebuildConfigList()
 
     def keyToOk(self):
         k = self.getCursorEntry()
         if k == _('Satellite positions'):
             self.session.openWithCallback(self.satellitesConfigScreenReturn, satellitesConfigScreen, self.getAllSat())
         elif k == _('User defined folder'):
-            self.keyOK()
-    
+            #self['config'].handleKey(KEY_OK)
+            ConfigListScreen.keyOK(self)
+            #self.keyOK()
+
     def satellitesConfigScreenReturn(self, retval):
         if retval:
             self.loadChochoContent()        # if there has been a change in the necessary satellites settings, then I need to rescan the available picon styles (by default picon resolution)
@@ -281,11 +283,14 @@ class mainConfigScreen(Screen, ConfigListScreen):
             self.reloadAvailableBackgrounds()               # reload all available backgrounds/styles for the new changed picon resolution
         #elif k == _('Picon background'):
         #    self.showPreviewImage()
+        
+        if self.getCursorEntry() != _('User defined folder'):
+            self.rebuildConfigList()                        # config list rebuild - is allowed only if the cursor is not at ConfigText (picon folder configuration by user input), because left/arrow RCU buttons are neccessary to move the cursor inside ConfigText
 
     def rebuildConfigList(self):
         self.list = []
         self.list.append(getConfigListEntry( _('Picon folder')    ,  config.plugins.chocholousekpicons.piconFolder ))
-        if config.plugins.chocholousekpicons.piconFolder.value == '(user defined)':
+        if config.plugins.chocholousekpicons.piconFolder.value == 'user_defined':
             self.list.append(getConfigListEntry( _('User defined folder'), config.plugins.chocholousekpicons.piconFolderUser ))
         self.list.append(getConfigListEntry( _('Picon update method'), config.plugins.chocholousekpicons.method    ))
         self.list.append(getConfigListEntry( _('Satellite positions'), config.plugins.chocholousekpicons.usersats  ))
@@ -438,10 +443,6 @@ class mainConfigScreen(Screen, ConfigListScreen):
         print('MYDEBUGLOGLINE - Error! Could not get information about chipset-architecture! Returning an empty string!')
         return ''
 
-    #def createDefaultPiconDir(self):
-    #   if not os_path.exists('/usr/share/enigma2/picon'):
-    #       os_makedirs('/usr/share/enigma2/picon')
-
     ###########################################################################
 
     def loadChochoContent(self):
@@ -534,8 +535,10 @@ class mainConfigScreen(Screen, ConfigListScreen):
     #    return re.findall('.*picon(.*)-220x132-23\.5.*\n+', self.chochoContent)
 
 
+
 ###########################################################################
 ###########################################################################
+
 
 
 class satellitesConfigScreen(Screen, ConfigListScreen):
@@ -573,15 +576,14 @@ class satellitesConfigScreen(Screen, ConfigListScreen):
         self.lineHeight = 1             # for text height auto-correction on dmm-enigma2 (0 = enable auto-correction ; 1 = disable auto-correction)
 
         self['title_txt'] = Label(_('Select satellites:'))
-        self['txt_green'] = StaticText(_('OK'))
+        self['txt_green'] = StaticText(_('Done'))
 
-        self["actions"] = ActionMap( ["SetupActions", "ColorActions"], 
+        self["actions"] = ActionMap( ["SetupActions", "ColorActions"],
         {
-            'left'  : self.keyToLeft,
-            'right' : self.keyToRight,
+            'left'  : self['config'].pageUp,
+            'right' : self['config'].pageDown,
             'green' : self.keyToExit,
-            'ok'    : self.keyToExit,
-            'cancel': self.keyToExit
+            'ok'    : self.keyToOk
         }, -2)
 
         if newOE():
@@ -592,27 +594,22 @@ class satellitesConfigScreen(Screen, ConfigListScreen):
         
         self.onShown.append(self.rebuildConfigList)
 
-    def keyToLeft(self):
-        ConfigListScreen.keyLeft(self)
+    def keyToOk(self):
         self.switchSelectedSat()
-        self.rebuildConfigList()
-
-    def keyToRight(self):
-        ConfigListScreen.keyRight(self)
-        self.switchSelectedSat()
-        self.rebuildConfigList()
-
+        self.changedEntry()
+    
     def switchSelectedSat(self):
         selected = self['config'].getCurrent()[0]                               # value example:   '23.5E'
         if selected in config.plugins.chocholousekpicons.usersats.value:        # list example:    ['19.2E', '23.5E']
-            config.plugins.chocholousekpicons.usersats.value.remove(selected)
+            config.plugins.chocholousekpicons.usersats.value.remove(selected)   # remove the cursor selected satellite position from user satellites list
         else:
-            config.plugins.chocholousekpicons.usersats.value.append(selected)
+            config.plugins.chocholousekpicons.usersats.value.append(selected)   # append the cursor selected satellite position to user satellites list
 
     def changedEntry(self):
         for x in self.onChangedEntry:
             x()
-        self['txt_green'].setText(_('OK') + '*')
+        self['txt_green'].setText(_('Done') + '*')
+        self.rebuildConfigList()
 
     def rebuildConfigList(self):
         self.list = []
@@ -632,8 +629,10 @@ class satellitesConfigScreen(Screen, ConfigListScreen):
             self.close(False)
 
 
+
 ###########################################################################
 ###########################################################################
+
 
 
 class piconsUpdateJobScreen(Screen):
@@ -714,18 +713,18 @@ class piconsUpdateJobScreen(Screen):
         if config.plugins.chocholousekpicons.method.value != 'all' and not self.bouqet_list:
             return True, _('No userbouquet files found !\nPlease check the folder /etc/enigma2 for the userbouquet files.')
 
-        # 3) Skontroluje sa existencia zložky s pikonami na disku (ak zložka neexistuje, vytvorí sa nová)
-        if config.plugins.chocholousekpicons.piconFolder.value == '(user defined)':
-            self.piconDIR = config.plugins.chocholousekpicons.piconFolderUser.value
+        # 3) Skontroluje sa existencia zložky s pikonami na lokalnom disku (ak zložka neexistuje, vytvorí sa nová)
+        if config.plugins.chocholousekpicons.piconFolder.value == 'user_defined':
+            self.piconDIR = config.plugins.chocholousekpicons.piconFolderUser.value.strip()
+            if self.piconDIR.endswith('/'):
+                self.piconDIR = self.piconDIR[:-1]
         else:
             self.piconDIR = config.plugins.chocholousekpicons.piconFolder.value
         if not os_path.exists(self.piconDIR):
             os_makedirs(self.piconDIR)
-        #if not os_path.exists(self.piconDIR):
-        #    return True, _('The configured picon folder does not exist!\nPlease check the picon folder in plugin configuration.\nCurrent picon folder: %s') % (self.piconDIR)
         
-        if 'sync' in config.plugins.chocholousekpicons.method.value:
         # 4.A) Vytvorí sa zoznam serv.ref.kódov nájdených vo všetkych userbouquet súboroch v set-top boxe (vytiahnem z nich len servisné referenčné kódy)        
+        if 'sync' in config.plugins.chocholousekpicons.method.value:
             self.writeLog(_('Preparing a list of picons from userbouquet files.'))
             self.SRC_in_Bouquets = ''
             for bq_file in self.bouqet_list:
@@ -735,11 +734,11 @@ class piconsUpdateJobScreen(Screen):
             self.SRC_in_Bouquets = re.findall('.*#SERVICE\s([0-9a-fA-F]+_0_[0-9a-fA-F_]+0_0_0).*\n*', self.SRC_in_Bouquets.replace(":","_") )
             self.SRC_in_Bouquets = list(set(self.SRC_in_Bouquets))              # remove duplicate items ---- converting to <set> and then again back to the <list>
             self.writeLog(_('...done.'))
-        else:
         # 4.B) Vytvorí sa fiktívny t.j. prázdny zoznam SRC kódov z userbouquet zoznamov, aby v ďalšiom kroku boli všetky aktuálne pikony na lokálnom disku vymazané (metóda bez synchronizácie pikon s userbouquets)
+        else:
             self.SRC_in_Bouquets = []
         
-        # 5) Vytvorí sa zoznam picon uložených na lokálnom disku (v internom flash-disku alebo na externom USB či HDD) - včetne veľkostí týchto súborov !
+        # 5) Vytvorí sa zoznam picon uložených na lokalnom disku (na internom flash-disku alebo na externom USB či HDD) - včetne veľkostí týchto súborov !
         self.writeLog(_('Preparing a list of picons from the picon directory on the local disk.'))
         self.SRC_in_HDD = {}
         dir_list = glob.glob(self.piconDIR + '/*.png')
@@ -747,14 +746,14 @@ class piconsUpdateJobScreen(Screen):
             for path_N_file in dir_list:
                 self.SRC_in_HDD.update( { path_N_file.split("/")[-1].split(".")[0]  :   int(os_path.getsize(path_N_file))  } )     # os.stat.st_time('/etc/enigma2/'+filename)
 
-        # 6) Vymažú sa neexistujúce picon-súbory na disku v set-top-box-e, ktoré sú zbytočné, nakoľko neexistujú tiež v žiadnom userbouquet súbore a teda na disku budú iba zavadziať
+        # 6) Vymažú sa neexistujúce picon-súbory na lokalnom disku (v set-top boxe), ktoré sú zbytočné, nakoľko neexistujú tiež v žiadnom userbouquet súbore a teda na disku budú iba zavadziať
         self.writeLog(_('Deleting unneccessary picons from local disk...'))
         self.SRC_to_Delete = list(  set(self.SRC_in_HDD.keys()) - set(self.SRC_in_Bouquets)  )
         for src in self.SRC_to_Delete:
             os_remove(self.piconDIR + '/' + src + '.png')       # v OpenATV nedostavam v adresaroch aj znak lomitka naviac, takze ho tu musim pridavat
             #os_remove(self.piconDIR + src + '.png')            # v OpenPLi dostavam v adresaroch aj znak lomitka naviac, takze ho tu netreba pridavat
             self.piconCounters['removed'] += 1
-        self.writeLog(_('...%s picons deleted.') % self.piconCounters['removed'] )
+        self.writeLog(_('...%s picons deleted.') % self.piconCounters['removed'])
         
         # 7) Pripraví sa zoznam názvov všetkých súborov .7z na sťahovanie z internetu - podľa konfigurácie pluginu
         self.filesForDownload = []
@@ -897,8 +896,10 @@ class piconsUpdateJobScreen(Screen):
         self['logWindow'].lastPage()
 
 
+
 ###########################################################################
 ###########################################################################
+
 
 
 def findHostnameAndNewPlugin():
@@ -908,7 +909,7 @@ def findHostnameAndNewPlugin():
     '''
     global plugin_version_local, plugin_version_online
     url_lnk = ''
-    url_list = ['https://github.com/s3n0/e2plugins/raw/master/ChocholousekPicons/released_build/', 'http://aion.webz.cz/ChocholousekPicons/']        # pozor ! je dolezite zachovat na konci retazca vo web.adresach vzdy aj lomitko, pre dalsie korektne pouzivanie tohoto retazca v algoritme
+    url_list = ['https://github.com/s3n0/e2plugins/raw/master/ChocholousekPicons/released_build/', 'http://aion.webz.cz/ChocholousekPicons/']  # it is important to keep the slash character at the end of the directory paths
     for hostname in url_list:
         try:
             url_handle = urllib2.urlopen(hostname + 'version.txt')
@@ -918,7 +919,7 @@ def findHostnameAndNewPlugin():
             print('Error when reading URL %s' % hostname + 'version.txt')
         else:
             plugin_version_online = url_handle.read().strip()
-            if plugin_version_online > plugin_version_local:    # Python 2.7 dokaze porovnat aj dva retazce... poradie porovnavania dvoch <str> je postupnostou hodnot znakov ASCII kodov v poradi z lava do prava a paradoxom v porovnani je, ze male znaky ASCII maju vyssiu hodnotu a preto su v porovnani <str> na vyssiej urovni ! v mojom pripade sa vsak jedna o cislice a tie su v ASCII kode rovnake (kod 0x30 az 0x39)
+            if plugin_version_online > plugin_version_local:
                 url_lnk = hostname
                 break
     return url_lnk
@@ -945,8 +946,10 @@ def pluginUpdateDo():
         return False
 
 
+
 ###########################################################################
 ###########################################################################
+
 
 
 def downloadFile(url, targetfile):
@@ -1010,17 +1013,19 @@ def newOE():
     return retval
 
 
+
 ###########################################################################
 ###########################################################################
 
 
-def pluginMenu(session, **kwargs):                          # starts when the plugin is opened via Plugin-MENU
+
+def pluginMenu(session, **kwargs):              # starts when the plugin is opened via Plugin-MENU
     print('PLUGINSTARTDEBUGLOG - pluginMenu executed')
     global plugin_version_local
     plugin_version_local = open(PLUGIN_PATH + 'version.txt','r').read().strip()
     session.open(mainConfigScreen)
 
-def sessionStart(reason, session):                         # starts after the Enigma2 (the session) booting
+def sessionStart(reason, session):              # starts after the Enigma2 (the session) booting
     if reason == 0:
         print('PLUGINSTARTDEBUGLOG - sessionStart executed, reason == 0')
         #session = kwargs['session']
@@ -1042,3 +1047,5 @@ def Plugins(**kwargs):
             needsRestart = False,
             fnc = pluginMenu)
         ]
+
+
