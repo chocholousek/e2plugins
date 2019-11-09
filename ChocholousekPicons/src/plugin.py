@@ -198,7 +198,7 @@ class mainConfigScreen(Screen, ConfigListScreen):
         
         config.plugins.chocholousekpicons.resolution = ConfigSelection(
                 default = '220x132',
-                choices = [ ('50x30','50x30'), ('100x60','100x60'), ('150x90','150x90'), ('220x132','220x132'), ('400x170','(ZZPicons) 400x170'), ('400x240','400x240'), ('500x300','500x300') ]
+                choices = [ ('50x30','50x30'), ('96x64','96x64'), ('100x60','100x60'), ('132x46','132x46'), ('150x90','150x90'), ('220x132','220x132'), ('400x170','(ZZPicons) 400x170'), ('400x240','400x240'), ('500x300','500x300') ]
                 )
         
         config.plugins.chocholousekpicons.background = ConfigSelection(
@@ -557,18 +557,18 @@ class satellitesConfigScreen(Screen, ConfigListScreen):
 
     if sizemaxX > 1900:    # Full-HD or higher
         skin = '''
-        <screen name="satellitesConfigScreen" position="center,center" size="450,900" title="Satellite positions" flags="wfNoBorder" backgroundColor="#44000000">
-            <widget name="config"    position="center,120" size="350,700" font="Regular;30" itemHeight="32" scrollbarMode="showOnDemand" transparent="0" backgroundColor="#22000000" />
-            <widget name="title_txt" position="center,40"  size="350,60"  font="Regular;42" foregroundColor="yellow" transparent="1" halign="center" valign="top" />
+        <screen name="satellitesConfigScreen" position="center,center" size="800,900" title="Satellite positions" flags="wfNoBorder" backgroundColor="#44000000">
+            <widget name="config"    position="center,120" size="700,700" font="Regular;30" itemHeight="32" scrollbarMode="showOnDemand" transparent="0" backgroundColor="#22000000" />
+            <widget name="title_txt" position="center,40"  size="700,60"  font="Regular;42" foregroundColor="yellow" transparent="1" halign="center" valign="top" />
             
             <ePixmap pixmap="skin_default/buttons/green.png" position="25,854" size="30,46" transparent="1" alphatest="on" zPosition="1" />
             <widget render="Label" source="txt_green"        position="65,854" size="250,46" halign="left" valign="center" font="Regular;28" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
         </screen>'''
     else:                   # HD-ready or lower
         skin = '''
-        <screen name="satellitesConfigScreen" position="center,center" size="350,600" title="Satellite positions" flags="wfNoBorder" backgroundColor="#44000000">
-            <widget name="config"    position="center,70" size="300,470" font="Regular;22" itemHeight="23" scrollbarMode="showOnDemand" transparent="0" backgroundColor="#22000000" />
-            <widget name="title_txt" position="center,20" size="300,40"  font="Regular;24" foregroundColor="yellow" transparent="1" halign="center" valign="top" />
+        <screen name="satellitesConfigScreen" position="center,center" size="650,600" title="Satellite positions" flags="wfNoBorder" backgroundColor="#44000000">
+            <widget name="config"    position="center,70" size="600,470" font="Regular;22" itemHeight="23" scrollbarMode="showOnDemand" transparent="0" backgroundColor="#22000000" />
+            <widget name="title_txt" position="center,20" size="600,40"  font="Regular;24" foregroundColor="yellow" transparent="1" halign="center" valign="top" />
             
             <ePixmap pixmap="skin_default/buttons/green.png" position="20,560" size="30,40" transparent="1" alphatest="on" zPosition="1" />
             <widget render="Label" source="txt_green"        position="55,560" size="140,40" halign="left" valign="center" font="Regular;22" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
