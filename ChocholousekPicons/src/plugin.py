@@ -934,6 +934,7 @@ class piconsUpdateJobScreen(Screen):
 
 ###########################################################################
 ###########################################################################
+###########################################################################
 
 
 
@@ -988,11 +989,12 @@ def pluginUpdateDo():
 
 ###########################################################################
 ###########################################################################
+###########################################################################
 
 
 
 def downloadFile(url, targetfile):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0'}      # 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
     
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
@@ -1004,19 +1006,19 @@ def downloadFile(url, targetfile):
     
     try:
         req = urllib2.Request(url, data=None, headers=headers)
-        handler = urllib2.urlopen(req, context=ctx)
+        handler = urllib2.urlopen(req, context=ctx, timeout=15)
         if 'drive.google' in url:
             for c in cookie_jar:
                 if c.name.startswith('download_warning'):                    # in case of drive.google download a virus warning message is possible (for some downloads)
-                    url = url.replace('&id=','&confirm=%s&id=' % c.value)    # and then it's necessary to add a parameter with confirmation of the warning message
+                    url = url.replace('&id=', '&confirm=%s&id=' % c.value)   # and then it's necessary to add a parameter with confirmation of the warning message
                     req = urllib2.Request(url, data=None, headers=headers)
-                    handler = urllib2.urlopen(req, context=ctx)
+                    handler = urllib2.urlopen(req, context=ctx, timeout=15)
                     break
         data = handler.read()
         with open(targetfile, 'wb') as f:
             f.write(data)
     except Exception as e:
-        print('File download error: %s, URL: %s, targetfile: %s' % (e.message, url, targetfile) )
+        print('File download error: %s , URL: %s , targetfile: %s' % (str(e), url, targetfile) )
         return False
     return True
 
@@ -1052,6 +1054,7 @@ def newOE():
 
 ###########################################################################
 ###########################################################################
+###########################################################################
 
 
 
@@ -1083,5 +1086,4 @@ def Plugins(**kwargs):
             needsRestart = False,
             fnc = pluginMenu)
         ]
-
 
