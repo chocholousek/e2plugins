@@ -190,26 +190,5 @@ msgstr "Došlo k chybám!"
 msgid "Done !"
 msgstr "Konec!"
 
-msgid "Exit"
-msgstr "Ukončit"
-
-msgid ""
-"The plugin has been updated to the new version.\n"
-"A quick reboot is required.\n"
-"Do a quick reboot now ?"
-msgstr ""
-"Plugin byl aktualizován na novou verzi.\n"
-"Pro dokončení instalace je třeba restart.\n"
-"Přejete si tak učinit nyní?"
-
-msgid "Picon update method"
-msgstr "Metoda aktualizace picon"
-
-msgid "copy all picons"
-msgstr "kopírovat všechny picony"
-
-msgid "sync with TV userbouquets"
-msgstr "rozbalit picony TV nalezené v oblíbených"
-
-msgid "sync with TV+RADIO userbouquets"
-msgstr "rozbalit picony TV+RADIO nalezené v oblíbených"
+msgid "No operation ! Picon update failed !"
+msgstr "Žádná operace ! Aktualizace picon se nezdařila !"
