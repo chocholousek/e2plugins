@@ -2,9 +2,9 @@ Binary executable files of the "7za" archiver, designed exclusively for Linux se
 
 v9.20:
 
-- mips32el (mipsel)
-- arm (v7 / 32-bit)
-- aarch64 (arm v8 in 64bit mode)
+- mips32el (32bit / mipsel)
+- arm (32bit / arm v7)
+- aarch64 (64bit / arm v8)
 
 v16.02:
 
